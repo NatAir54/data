@@ -7,11 +7,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -23,28 +24,26 @@ public class DefaultDataService implements DataService {
     @Override
     @Transactional
     public void process() {
-        AtomicInteger processedRows = new AtomicInteger(0);
+        Page<Data> page;
+        int pageNumber = 0;
 
-        Page<Data> page = dataRepository.findAll(PageRequest.of(0, PAGE_SIZE));
-
-        while (page.hasContent()) {
+        do {
+            page = dataRepository.findAll(
+                    PageRequest.of(pageNumber, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "id"))
+            );
             log.info("Processing page {} of size {}", page.getNumber(), page.getSize());
 
-            page.getContent().forEach(data -> {
-                data.setModifyAt(LocalDateTime.now());
-                processedRows.incrementAndGet();
-            });
+            List<Data> dataList = page.getContent().stream()
+                    .peek(data -> data.setModifyAt(LocalDateTime.now()))
+                    .toList();
 
-            dataRepository.saveAll(page.getContent());
+            dataRepository.saveAll(dataList);
             log.debug("Saved {} rows for page {}", page.getContent().size(), page.getNumber());
 
-            if (processedRows.get() >= 300) {
-                throw new RuntimeException("Simulated exception after processing 300 rows");
-            }
+            pageNumber++;
 
-            page = dataRepository.findAll(page.nextPageable());
-        }
+        } while (page.hasNext());
 
-        log.info("Data processing completed. Total processed rows: {}", processedRows);
+        log.info("Data processing completed.");
     }
 }

@@ -44,6 +44,7 @@ public class TestDataFiller implements CommandLineRunner {
         try {
             dataRepository.saveAll(batch);
             log.info("Successfully inserted {} rows into the database.", batch.size());
+
         } catch (Exception e) {
             log.error("Error inserting data into the database: {}", e.getMessage());
             throw new RuntimeException("Error saving batch", e);
