@@ -61,7 +61,6 @@ public class DefaultDataService implements DataService {
 
     private void modifyData(List<Data> dataList, LocalDateTime dateTime) {
         dataList.forEach(data -> data.setModifiedAt(dateTime));
-        dataRepository.saveAll(dataList);
         entityManager.flush();
         entityManager.clear();
     }
