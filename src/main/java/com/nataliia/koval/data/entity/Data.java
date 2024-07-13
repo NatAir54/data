@@ -21,6 +21,6 @@ public class Data {
     @Column(name = "data", nullable = false)
     private byte[] data;
 
-    @Column(name = "modified_at")
+    @Column(name = "modified_at", nullable = false)
     private LocalDateTime modifiedAt;
 }
